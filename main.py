@@ -32,7 +32,6 @@ def main():
         logger.info(f"Successfuly logged in to Citadel IPA as: {username}")
     except Exception as e:
         logger.critical("Unable to connect to Citadel IPA server. Check credentials.")
-        logger.exception(e)
         sys.exit(1)
     
     while(True):
