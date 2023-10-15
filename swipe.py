@@ -10,7 +10,7 @@ class Swipe():
             id = self.data[2:10]
             lcc = self.data[10:12]
         except:
-            self.logger.warning("Swipe data was not recieved in the correct format.")
+            self.logger.warning(f"Swipe data was not recieved in the correct format: {self.data}")
             id, lcc = ""
         return id, lcc
     

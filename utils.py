@@ -17,3 +17,7 @@ class Utils():
         logger.addHandler(handler)
         logger.addHandler(screen_handler)
         return logger
+    
+    def exit(logger, msg = "Exiting..."):
+        logger.info(msg)
+        sys.exit(1)

@@ -3,3 +3,4 @@ test.py
 test.json
 __pycache__/*
 *.log
+.vscode/*

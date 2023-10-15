@@ -27,7 +27,7 @@ This repository is intended to permanently replace the previously used Cerberus 
 - For parsing the raw data from the swipe.
 - Stores 8 digit ID number and 2 digit LCC number.
 - expects data as sent by the MODEL:ET-MSR90 ETEKJOY card reader. Example data: `;9333333331108700000?\n`
-- The format is `;9<8ID><2LCC><Garbage><New Line>`. In the example, 33333333 is the 8 digit ID and 11 is the 2 digit LCC.
+- The format is `;9<8ID><2LCC><Garbage><New Line>`. In the example, `33333333` is the `8` digit ID and 11 is the 2 digit LCC.
 
 ### Utils
 - For various utilities.
