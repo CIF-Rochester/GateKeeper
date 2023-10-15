@@ -2,3 +2,4 @@ ipatest.py
 test.py
 test.json
 __pycache__/*
+*.log

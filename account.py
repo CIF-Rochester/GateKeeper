@@ -2,16 +2,24 @@ from swipe import Swipe
 from python_freeipa import ClientMeta
 import logging
 
+logging.getLogger().setLevel(logging.INFO)
+logging.basicConfig(filename='labswipe.log', encoding='utf-8', level=logging.INFO)
+
 ONE_USER_MATCHED = '1 user matched'
 
 class Account():
     def __init__(self, swipe: Swipe, client: ClientMeta) -> None:
         self.user = client.user_find(o_employeenumber=swipe.id)
         self.summary = self.getSummary()
-        self.netid = self.getNetID()
-        self.lcc = self.getLCC()
         self.swiped_lcc = swipe.lcc
-        self.groups = self.getGroups()
+
+        try:
+            self.netid = self.getNetID()
+            self.lcc = self.getLCC()
+            self.groups = self.getGroups()
+            self.has_access = self.hasAccess()
+        except:
+            self.has_access = False
 
     def getNetID(self):
         return self.user['result'][0]['uid'][0]
@@ -46,10 +54,3 @@ class Account():
     def updateLCC():
         #TODO
         pass
-
-if __name__ == "__main__":
-    client = ClientMeta('citadel.cif.rochester.edu', verify_ssl=False)
-    client.login('cifadmin', '')
-
-    account = Account(Swipe(";?"), client)
-    print(account.hasAccess())
