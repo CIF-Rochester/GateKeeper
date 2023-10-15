@@ -31,4 +31,4 @@ This repository is intended to permanently replace the previously used Cerberus 
 
 ### Utils
 - For various utilities.
-- Right now, just used for making the logger.
+- Right now, just used for making the logger and the `exit()` function
