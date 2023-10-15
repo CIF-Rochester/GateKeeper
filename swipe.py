@@ -1,11 +1,13 @@
+import logging
+
 class Swipe():
 
-    def __init__(self, data: str, logger) -> None:
+    def __init__(self, data: str, logger: logging.Logger) -> None:
         self.data = data
         self.logger = logger
         self.id, self.lcc = self.parseReader()
 
-    def parseReader(self):
+    def parseReader(self) -> (str, str):
         try:
             id = self.data[2:10]
             lcc = self.data[10:12]

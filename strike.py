@@ -1,7 +1,9 @@
-class Strike():
-    def __init__(self) -> None:
-        pass
+import logging
 
-    def strike():
+class Strike():
+    def __init__(self, logger: logging.Logger) -> None:
+        self.logger = logger
+
+    def strike() -> None:
         pass
     

@@ -5,7 +5,7 @@ class Utils():
     def __init__(self) -> None:
         pass
 
-    def setup_custom_logger(name):
+    def setup_custom_logger(name) -> logging.Logger:
         formatter = logging.Formatter(fmt='[%(asctime)s] %(levelname)-8s %(message)s',
                                     datefmt='%Y-%m-%d %H:%M:%S')
         handler = logging.FileHandler('labswipe.log', mode='a')
@@ -18,6 +18,6 @@ class Utils():
         logger.addHandler(screen_handler)
         return logger
     
-    def exit(logger, msg = "Exiting..."):
+    def exit(logger: logging.Logger, msg = "Exiting...") -> None:
         logger.info(msg)
-        sys.exit(1)
+        sys.exit(0)

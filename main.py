@@ -6,12 +6,15 @@ from python_freeipa import ClientMeta
 import configparser
 import signal
 import urllib3
+import logging
+import os
 
+SCRIPT_PATH = os.path.abspath(os.path.dirname(__file__))
+PATH_TO_CRED_CFG = os.path.join(SCRIPT_PATH, "cred.cfg")
 EXIT_TOKENS = ['q', 'exit', 'quit']
-PATH_TO_CRED_CFG = "cred.cfg"
 LOGGER_NAME = "lab_swipe"
 
-logger = Utils.setup_custom_logger(LOGGER_NAME)
+logger: logging.Logger = Utils.setup_custom_logger(LOGGER_NAME)
 
 urllib3.disable_warnings()
 

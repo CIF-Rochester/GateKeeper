@@ -1,10 +1,11 @@
 from swipe import Swipe
 from python_freeipa import ClientMeta
+import logging
 
 ONE_USER_MATCHED = '1 user matched'
 
 class Account():
-    def __init__(self, swipe: Swipe, client: ClientMeta, logger) -> None:
+    def __init__(self, swipe: Swipe, client: ClientMeta, logger: logging.Logger) -> None:
         self.logger = logger
         self.client = client
         self.user = client.user_find(o_employeenumber=swipe.id) # returns a dictionary with the user's info
@@ -19,19 +20,19 @@ class Account():
         except Exception as e:
             self.has_access = False
 
-    def getNetID(self):
+    def getNetID(self) -> str:
         return self.user['result'][0]['uid'][0]
     
-    def getSummary(self):
+    def getSummary(self) -> str:
         return self.user['summary']
     
-    def getLCC(self):
+    def getLCC(self) -> str:
         return self.user['result'][0]['employeetype'][0]
     
-    def getGroups(self):
+    def getGroups(self) -> list:
         return self.user['result'][0]['memberof_group']
     
-    def hasAccess(self):
+    def hasAccess(self) -> bool:
         if self.summary != ONE_USER_MATCHED:
             # make sure that there is only one user being matched
             # (if swiped lcc and 8 digit num are both empty, all users will be matched)
