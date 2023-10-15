@@ -1,14 +1,11 @@
 from swipe import Swipe
 from python_freeipa import ClientMeta
-import logging
-
-logging.getLogger().setLevel(logging.INFO)
-logging.basicConfig(filename='labswipe.log', encoding='utf-8', level=logging.INFO)
 
 ONE_USER_MATCHED = '1 user matched'
 
 class Account():
-    def __init__(self, swipe: Swipe, client: ClientMeta) -> None:
+    def __init__(self, swipe: Swipe, client: ClientMeta, logger) -> None:
+        self.logger = logger
         self.user = client.user_find(o_employeenumber=swipe.id)
         self.summary = self.getSummary()
         self.swiped_lcc = swipe.lcc
@@ -18,7 +15,8 @@ class Account():
             self.lcc = self.getLCC()
             self.groups = self.getGroups()
             self.has_access = self.hasAccess()
-        except:
+        except Exception as e:
+            self.logger.exception(e)
             self.has_access = False
 
     def getNetID(self):
@@ -46,7 +44,7 @@ class Account():
             elif int(self.swiped_lcc) > int(self.lcc):
                 self.updateLCC()
         except:
-            logging.warning("LCC String to Int conversion failed. Automatically denying access.")
+            self.logger.warning("LCC String to Int conversion failed. Automatically denying access.")
             return False
 
         return True
