@@ -22,7 +22,10 @@ This repository is intended to permanently replace the previously used Cerberus 
 
 ### Strike
 - For controlling the door strike.
-- Not implemented yet.
+- Contains three classes: `Strike`, `ArduinoStrike`, `RasPiStrike`.
+- `Strike` is for testing purposes, it doesn't send any electrical signals.
+- `ArduinoStrike` is for activating the strike with the arduino.
+- `RasPiStrike` is for activating the strike with the GPIO pins of a Raspberry Pi. Not yet implemented.
 
 ### Swipe
 - For parsing the raw data from the swipe.
