@@ -11,8 +11,6 @@ This repository is intended to permanently replace the previously used Cerberus 
 - run `python3 main.py`
 
 # Info
-- So far, the only code written is for interfacing with the card reader and the IPA server.
-- No code has been written for dealing with the actual door strike.
 - The name `GateKeeper` subject to change. Think of it as a codename for the time being.
 
 # Classes
