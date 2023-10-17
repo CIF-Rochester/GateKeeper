@@ -5,6 +5,7 @@ This repository is intended to permanently replace the previously used Cerberus 
 
 # Quick Start
 - install Python 3.11.4
+- **(Recommended)** Create a virtual environment with `python3 -m venv .venv` and activate it with `source .venv/bin/activate`
 - run `python3 -m pip install -r requirements.txt`
 - fill out the `cred.cfg` file with your credentials
 - run `python3 main.py`
