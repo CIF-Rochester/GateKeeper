@@ -24,6 +24,8 @@ def signal_handler(sig, frame):
 signal.signal(signal.SIGINT, signal_handler)
 
 def main():
+    strike = Strike(logger)
+
     try:
         config = configparser.ConfigParser()
         config.read(PATH_TO_CRED_CFG)
@@ -57,7 +59,7 @@ def main():
         try:
             if account.has_access:
                 logger.info(f"Access granted to {account.netid}")
-                Strike.strike()
+                strike.strike()
             else:
                 logger.info(f"Denied access to ID: {swipe.id} LCC: {swipe.lcc}")
         except:
