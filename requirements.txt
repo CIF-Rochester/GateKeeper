@@ -1,2 +1,4 @@
+pyserial==3.5
 python_freeipa==1.0.6
+RPi.GPIO==0.7.1
 urllib3==2.0.6
