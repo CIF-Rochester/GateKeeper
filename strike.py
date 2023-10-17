@@ -5,19 +5,51 @@ import time
 import serial.tools.list_ports
 
 class Strike():
+    """
+    Parent class for ArduinoStrike and RasPiStrike. Used for testing purposes as well.
+    """
+    
     def __init__(self, logger: logging.Logger) -> None:
         self.logger = logger
-        self.arduino = self.find_arduino()
 
     def strike(self):
-        logger.info("Fake strike activated!")
+        """
+        Strike function for testing purposes.
+        """
+        
+        self.logger.info("Fake strike activated!")
+
+class RasPiStrike(Strike):
+    """
+    Class implementation of striking the door using the Raspberry Pi's pins.
+    """
+    
+    def __init__(self, logger: logging.Logger) -> None:
+        self.logger = logger
+    
+    def strike(self):
+        """
+        Implementation of striking the door using the Raspberry Pi's pins.
+        #TODO
+        """
+        
+        self.logger.info("RasPiStrike.strike() activated, but not implemented yet.")
 
 class ArduinoStrike(Strike):
+    """
+    Class implementation of striking the door using an Arduino.
+    """
+
     def __init__(self, logger: logging.Logger) -> None:
         self.logger = logger
         self.arduino = self.find_arduino()
         
     def find_arduino(self) -> serial.Serial:
+        """
+        Find the Arduino's serial connection by testing 
+        all serial connections until the Arduino is found. 
+        """
+        
         ports = serial.tools.list_ports.comports()
         for port in ports:
             try:
@@ -33,20 +65,23 @@ class ArduinoStrike(Strike):
                 continue  # Go to the next port
         
         self.logger.error("Arduino not found")
-        return None  # Return None if Arduino is not found
+        return None
     
     def strike(self) -> None:
-        if self.arduino is not None:  # Check if Arduino is available before sending commands
+        """
+        Implementation of striking the door using the Arduino.
+        """
+
+        if self.arduino is not None:
             try:
                 self.arduino.write(b'1')
-                #self.logger.info("Strike activated")
             except Exception as e:
                 self.logger.error(f"Error striking: {str(e)}")
         else:
             self.logger.warning("Strike not sent; Arduino not available.")
 
 def main():
-    # Example usage:
+    # Testing
     logger = Utils.setup_custom_logger(__name__)
     strike_controller = ArduinoStrike(logger)
     strike_controller.strike()

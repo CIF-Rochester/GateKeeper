@@ -1,20 +1,20 @@
 from swipe import Swipe
 from account import Account
-from strike import Strike
+from strike import Strike, ArduinoStrike, RasPiStrike
 from utils import Utils
 from python_freeipa import ClientMeta
 import configparser
 import signal
 import urllib3
 import logging
+import argparse
 import os
 
 SCRIPT_PATH = os.path.abspath(os.path.dirname(__file__))
-PATH_TO_CRED_CFG = os.path.join(SCRIPT_PATH, "cred.cfg")
+PATH_TO_CFG = os.path.join(SCRIPT_PATH, "config.cfg")
 EXIT_TOKENS = ['q', 'exit', 'quit']
-LOGGER_NAME = "lab_swipe"
 
-logger: logging.Logger = Utils.setup_custom_logger(LOGGER_NAME)
+logger: logging.Logger = Utils.setup_custom_logger(__name__)
 
 urllib3.disable_warnings()
 
@@ -23,17 +23,43 @@ def signal_handler(sig, frame):
 
 signal.signal(signal.SIGINT, signal_handler)
 
+def parse_args() -> Strike:
+    parser = argparse.ArgumentParser(description="GateKeeper program for the Computer Interest Floor Lab's door strike.")
+    parser.add_argument('--strike', '-s', help='Method used for striking the door. Fake is used for testing purposes.', choices=['fake', 'arduino', 'pi'], default=None)
+
+    args = parser.parse_args()
+
+    if args.strike:
+        method = args.strike
+    else:
+        try:
+            config = configparser.ConfigParser()
+            config.read(PATH_TO_CFG)
+            method = config.get('strike', 'method')
+        except Exception as e:
+            logger.exception(f"Something is wrong with the config file: {e}")
+            logger.warning("Setting output method to \"fake\"...")
+            method = 'fake'
+    
+    if method == 'fake':
+        strike = Strike(logger)
+    elif method == 'arduino':
+        strike = ArduinoStrike(logger)
+    elif method == 'pi':
+        strike = RasPiStrike(logger)
+
+    return strike
+
 def main():
-    strike = Strike(logger)
+    strike = parse_args()
 
     try:
         config = configparser.ConfigParser()
-        config.read(PATH_TO_CRED_CFG)
+        config.read(PATH_TO_CFG)
         username = config.get('credentials', 'username')
         password = config.get('credentials', 'password')
     except Exception as e:
-        logger.critical("Something is wrong with the credentials config file.")
-        logger.exception(e)
+        logger.exception(f"Something is wrong with the config file: {e}")
         Utils.exit(logger, msg = "Forcing exit...")
 
     try:

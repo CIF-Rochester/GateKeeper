@@ -5,34 +5,44 @@ import logging
 ONE_USER_MATCHED = '1 user matched'
 
 class Account():
+    """
+    Representation of an IPA server account.
+    """
+
     def __init__(self, swipe: Swipe, client: ClientMeta, logger: logging.Logger) -> None:
         self.logger = logger
         self.client = client
         self.user = client.user_find(o_employeenumber=swipe.id) # returns a dictionary with the user's info
-        self.summary = self.getSummary()
+        self.summary = self.get_summary()
         self.swiped_lcc = swipe.lcc
 
         try:
-            self.netid = self.getNetID()
-            self.lcc = self.getLCC()
-            self.groups = self.getGroups()
-            self.has_access = self.hasAccess()
+            self.netid = self.get_net_id()
+            self.lcc = self.get_lcc()
+            self.groups = self.get_groups()
+            self.has_access = self.has_access()
         except Exception as e:
             self.has_access = False
 
-    def getNetID(self) -> str:
+    def get_net_id(self) -> str:
         return self.user['result'][0]['uid'][0]
     
-    def getSummary(self) -> str:
+    def get_summary(self) -> str:
         return self.user['summary']
     
-    def getLCC(self) -> str:
+    def get_lcc(self) -> str:
         return self.user['result'][0]['employeetype'][0]
     
-    def getGroups(self) -> list:
+    def get_groups(self) -> list:
         return self.user['result'][0]['memberof_group']
     
-    def hasAccess(self) -> bool:
+    def has_access(self) -> bool:
+        """
+        Returns `True` if the user should have access 
+        based on their credentials. Returns `False` if
+        they are denied access. 
+        """
+        
         if self.summary != ONE_USER_MATCHED:
             # make sure that there is only one user being matched
             # (if swiped lcc and 8 digit num are both empty, all users will be matched)
