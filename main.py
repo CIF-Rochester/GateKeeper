@@ -49,8 +49,8 @@ def main():
         Utils.exit(logger, msg = "Forcing exit...")
     
     while(True):
-        # card reader acts as keyboard, so input() is
-        # used to get the output of the card reader
+        # card reader acts as keyboard, so input() is used to get the output of
+        # the card reader
         try:
             data_from_swipe = input()
         except EOFError:
@@ -75,4 +75,16 @@ def main():
     Utils.exit(logger)
 
 if __name__ == "__main__":
-    main()
+    # Catch any exceptions that bubble up all the way through `main` to make
+    # sure the exception gets logged properly.
+    try:
+        main()
+    except Exception as e:
+        logger = logging.getLogger(LOGGER_NAME)
+        if logger is None:
+            # Unhandled exception was raised before logger could be created, so
+            # we can't do anything better than just letting Python crash.
+            raise e
+
+        logger.critical('Unexpected exception. Crashing...', exc_info=e)
+        exit(1)
