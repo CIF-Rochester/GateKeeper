@@ -1,6 +1,7 @@
 from swipe import Swipe
 from python_freeipa import ClientMeta
 import logging
+from config import Config
 
 ONE_USER_MATCHED = '1 user matched'
 
@@ -9,8 +10,9 @@ class Account():
     Representation of an IPA server account.
     """
 
-    def __init__(self, swipe: Swipe, client: ClientMeta, logger: logging.Logger) -> None:
+    def __init__(self, swipe: Swipe, client: ClientMeta, logger: logging.Logger, config: Config) -> None:
         self.logger = logger
+        self.config = config
         self.client = client
         self.user = client.user_find(o_employeenumber=swipe.id) # returns a dictionary with the user's info
         self.summary = self.get_summary()
@@ -48,8 +50,8 @@ class Account():
             # (if swiped lcc and 8 digit num are both empty, all users will be matched)
             return False
 
-        if 'users' not in self.groups:
-            # make sure the account is in the users group
+        if not (set(self.groups) & self.config.access.allowed_groups):
+            # account does not have any of the groups with access
             return False
         
         try:

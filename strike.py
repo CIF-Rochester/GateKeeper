@@ -1,9 +1,9 @@
+from typing import Union
 from utils import Utils
 import serial
 import logging
 import time
 import serial.tools.list_ports
-import RPi.GPIO as GPIO
 
 class Strike():
     """
@@ -27,6 +27,7 @@ class RasPiStrike(Strike):
     """
     
     def __init__(self, logger: logging.Logger) -> None:
+        import RPi.GPIO as GPIO
         self.logger = logger
         GPIO.setmode(GPIO.Board)
         GPIO.setup(self.channel,GPIO.OUT)
@@ -84,6 +85,16 @@ class ArduinoStrike(Strike):
                 self.logger.error(f"Error striking: {str(e)}")
         else:
             self.logger.warning("Strike not sent; Arduino not available.")
+
+def get_strike_for_method(method: Union['fake', 'arduino', 'pi'], logger: logging.Logger) -> Strike:
+    if method == 'fake':
+        return Strike(logger)
+    elif method == 'arduino':
+        return ArduinoStrike(logger)
+    elif method == 'pi':
+        return RasPiStrike(logger)
+    else:
+        raise TypeError(f'Expected method to be one of fake, arduino, pi, but got `{method}`')
 
 def main():
     # Testing

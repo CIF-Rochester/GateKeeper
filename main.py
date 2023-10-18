@@ -1,9 +1,9 @@
 from swipe import Swipe
 from account import Account
-from strike import Strike, ArduinoStrike, RasPiStrike
+from strike import Strike, get_strike_for_method
 from utils import Utils
 from python_freeipa import ClientMeta
-import configparser
+from config import load_config, Config
 import signal
 import urllib3
 import logging
@@ -11,76 +11,57 @@ import argparse
 import os
 
 SCRIPT_PATH = os.path.abspath(os.path.dirname(__file__))
-PATH_TO_CFG = os.path.join(SCRIPT_PATH, "config.cfg")
+DEFAULT_CFG_PATH = os.path.join(SCRIPT_PATH, "config.cfg")
 EXIT_TOKENS = ['q', 'exit', 'quit']
-
-logger: logging.Logger = Utils.setup_custom_logger(__name__)
+LOGGER_NAME = 'lab_swipe'
 
 urllib3.disable_warnings()
 
 def signal_handler(sig, frame):
-    Utils.exit(logger, msg = "Exiting due to CTRL-C...")
+    Utils.exit(logging.getLogger(LOGGER_NAME), msg = "Exiting due to CTRL-C...")
 
 signal.signal(signal.SIGINT, signal_handler)
 
-def parse_args() -> Strike:
-    parser = argparse.ArgumentParser(description="GateKeeper program for the Computer Interest Floor Lab's door strike.")
-    parser.add_argument('--strike', '-s', help='Method used for striking the door. Fake is used for testing purposes.', choices=['fake', 'arduino', 'pi'], default=None)
+def main():
+    parser = argparse.ArgumentParser(description="GateKeeper program for controlling an electronic door strike with a card reader.")
+    parser.add_argument('--strike', '-s', help='Method used for controlling the door strike. Fake is used for testing purposes.', choices=['fake', 'arduino', 'pi'], default=None)
+    parser.add_argument('--config', '-c', help='Path to GateKeeper config file.', default=DEFAULT_CFG_PATH)
 
     args = parser.parse_args()
 
+    path_to_cfg = args.config
+    config: Config = load_config(path_to_cfg)
+
+    logger: logging.Logger = Utils.setup_custom_logger(LOGGER_NAME, log_file=config.logging.log)
+    logger.info(f"Loaded configuration from {path_to_cfg}: {repr(config)}")
+
+    strike_method = config.strike.method
     if args.strike:
-        method = args.strike
-    else:
-        try:
-            config = configparser.ConfigParser()
-            config.read(PATH_TO_CFG)
-            method = config.get('strike', 'method')
-        except Exception as e:
-            logger.exception(f"Something is wrong with the config file: {e}")
-            logger.warning("Setting output method to \"fake\"...")
-            method = 'fake'
-    
-    if method == 'fake':
-        strike = Strike(logger)
-    elif method == 'arduino':
-        strike = ArduinoStrike(logger)
-    elif method == 'pi':
-        strike = RasPiStrike(logger)
-
-    return strike
-
-def main():
-    strike = parse_args()
+        strike_method = args.strike
+    strike = get_strike_for_method(strike_method, logger)
 
     try:
-        config = configparser.ConfigParser()
-        config.read(PATH_TO_CFG)
-        username = config.get('credentials', 'username')
-        password = config.get('credentials', 'password')
+        client = ClientMeta(config.credentials.host, verify_ssl=config.credentials.verify_ssl)
+        client.login(config.credentials.username, config.credentials.password)
+        logger.info(f"Successfuly logged in to IPA at {config.credentials.host} as: {config.credentials.username}")
     except Exception as e:
-        logger.exception(f"Something is wrong with the config file: {e}")
-        Utils.exit(logger, msg = "Forcing exit...")
-
-    try:
-        client = ClientMeta('citadel.cif.rochester.edu', verify_ssl=False)
-        client.login(username, password)
-        logger.info(f"Successfuly logged in to Citadel IPA as: {username}")
-    except Exception as e:
-        logger.critical("Unable to connect to Citadel IPA server. Check credentials.")
+        logger.critical(f"Unable to connect to IPA server at {config.credentials.host}. Check credentials.")
         Utils.exit(logger, msg = "Forcing exit...")
     
     while(True):
-        data_from_swipe = input()
         # card reader acts as keyboard, so input() is
         # used to get the output of the card reader
+        try:
+            data_from_swipe = input()
+        except EOFError:
+            break
 
         if data_from_swipe.lower() in EXIT_TOKENS:
             break
 
         swipe = Swipe(data_from_swipe, logger)
 
-        account = Account(swipe, client, logger)
+        account = Account(swipe, client, logger, config)
 
         try:
             if account.has_access:

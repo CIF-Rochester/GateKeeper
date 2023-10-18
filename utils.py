@@ -1,7 +1,7 @@
 import logging
-import sys, os
-
-SCRIPT_PATH = os.path.abspath(os.path.dirname(__file__))
+import sys
+import os
+import pathlib
 
 class Utils():
     """
@@ -11,14 +11,17 @@ class Utils():
     def __init__(self) -> None:
         pass
 
-    def setup_custom_logger(name, file: str=os.path.join(SCRIPT_PATH, 'logs', 'labswipe.log')) -> logging.Logger:
+    def setup_custom_logger(name: str, log_file: str) -> logging.Logger:
         """
         Function to return a Logger with all the previously specified options.
         """
 
+        # Ensure directory containing the log_file exists
+        pathlib.Path(log_file).parent.mkdir(parents=True, exist_ok=True)
+
         formatter = logging.Formatter(fmt='[%(asctime)s] %(levelname)-8s %(message)s',
                                     datefmt='%Y-%m-%d %H:%M:%S')
-        handler = logging.FileHandler(file, mode='a')
+        handler = logging.FileHandler(log_file, mode='a')
         handler.setFormatter(formatter)
         screen_handler = logging.StreamHandler(stream=sys.stdout)
         screen_handler.setFormatter(formatter)
