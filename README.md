@@ -4,7 +4,7 @@ Lab Card Reader Program for CIF Lab. Updated 2023.
 This repository is intended to permanently replace the previously used Cerberus system.
 
 # Quick Start
-- install Python 3.11.4
+- install Python >= 3.8
 - **(Recommended)** Create a virtual environment with `python3 -m venv .venv` and activate it with `source .venv/bin/activate`
 - run `python3 -m pip install -r requirements.txt`
 - copy `config.example.cfg` to `config.cfg` and adjust the configuration
@@ -23,7 +23,7 @@ This repository is intended to permanently replace the previously used Cerberus 
 - Contains three classes: `Strike`, `ArduinoStrike`, `RasPiStrike`.
 - `Strike` is for testing purposes, it doesn't send any electrical signals.
 - `ArduinoStrike` is for activating the strike with the arduino.
-- `RasPiStrike` is for activating the strike with the GPIO pins of a Raspberry Pi. Not yet implemented.
+- `RasPiStrike` is for activating the strike with the GPIO pins of a Raspberry Pi. Not yet tested.
 
 ### Swipe
 - For parsing the raw data from the swipe.
