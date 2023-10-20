@@ -77,28 +77,25 @@ def main():
         Utils.exit(logger, msg = "Forcing exit...")
     
     while(True):
+        data_from_swipe = input()
+        # card reader acts as keyboard, so input() is
+        # used to get the output of the card reader
+
+        if data_from_swipe.lower() in EXIT_TOKENS:
+            break
+
+        swipe = Swipe(data_from_swipe, logger)
+
+        account = Account(swipe, client, logger)
+
         try:
-            data_from_swipe = input()
-            # card reader acts as keyboard, so input() is
-            # used to get the output of the card reader
-
-            if data_from_swipe.lower() in EXIT_TOKENS:
-                break
-
-            swipe = Swipe(data_from_swipe, logger)
-
-            account = Account(swipe, client, logger)
-
-            try:
-                if account.has_access:
-                    logger.info(f"Access granted to {account.netid}")
-                    strike.strike()
-                else:
-                    logger.info(f"Denied access to ID: {swipe.id} LCC: {swipe.lcc}")
-            except:
-                logger.warning(f"Unable to insantiate account from ID: {swipe.id}, LCC: {swipe.lcc}")
-        except Exception as e:
-            logger.exception(f"Encountered error: {e}")
+            if account.has_access:
+                logger.info(f"Access granted to {account.netid}")
+                strike.strike()
+            else:
+                logger.info(f"Denied access to ID: {swipe.id} LCC: {swipe.lcc}")
+        except:
+            logger.warning(f"Unable to insantiate account from ID: {swipe.id}, LCC: {swipe.lcc}")
 
     Utils.exit(logger)
 
