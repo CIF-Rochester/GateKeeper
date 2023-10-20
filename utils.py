@@ -1,6 +1,9 @@
 import logging
+import sys
+import os
+import pathlib
 import configparser
-import sys, os
+
 
 class Utils():
     """
@@ -14,6 +17,27 @@ class Utils():
     def __init__(self) -> None:
         pass
 
+
+    def setup_custom_logger(name: str, log_file: str) -> logging.Logger:
+        """
+        Function to return a Logger with all the previously specified options.
+        """
+
+        # Ensure directory containing the log_file exists
+        pathlib.Path(log_file).parent.mkdir(parents=True, exist_ok=True)
+        
+        formatter = logging.Formatter(fmt='[%(asctime)s] %(levelname)-8s %(message)s',
+                                    datefmt='%Y-%m-%d %H:%M:%S')
+        handler = logging.FileHandler(log_file, mode='a')
+        handler.setFormatter(formatter)
+        screen_handler = logging.StreamHandler(stream=sys.stdout)
+        screen_handler.setFormatter(formatter)
+        logger = logging.getLogger(name)
+        logger.setLevel(logging.DEBUG)
+        logger.addHandler(handler)
+        logger.addHandler(screen_handler)
+        return logger
+    
     def check_log_path_cfg():
         config = configparser.ConfigParser()
         config.read(Utils.PATH_TO_CFG)
@@ -25,28 +49,6 @@ class Utils():
             path = None
         
         return path
-
-    def setup_custom_logger(name, file_path: str=os.path.join(SCRIPT_PATH, 'logs')) -> logging.Logger:
-        """
-        Function to return a Logger with all the previously specified options.
-        """
-        
-        if not file_path.endswith(Utils.LOG_FILENAME):
-            file = os.path.join(file_path, Utils.LOG_FILENAME)
-        else:
-            file = file_path
-        
-        formatter = logging.Formatter(fmt='[%(asctime)s] %(levelname)-8s %(message)s',
-                                    datefmt='%Y-%m-%d %H:%M:%S')
-        handler = logging.FileHandler(file, mode='a')
-        handler.setFormatter(formatter)
-        screen_handler = logging.StreamHandler(stream=sys.stdout)
-        screen_handler.setFormatter(formatter)
-        logger = logging.getLogger(name)
-        logger.setLevel(logging.DEBUG)
-        logger.addHandler(handler)
-        logger.addHandler(screen_handler)
-        return logger
     
     def exit(logger: logging.Logger, msg = "Exiting...") -> None:
         """

@@ -1,3 +1,4 @@
+from typing import Union
 from utils import Utils
 import serial
 import logging
@@ -28,11 +29,10 @@ class RasPiStrike(Strike):
     
     def __init__(self, logger: logging.Logger) -> None:
         import RPi.GPIO as GPIO
-
         self.logger = logger
-        self.GPIO = GPIO
-        self.GPIO.setmode(GPIO.Board)
-        self.GPIO.setup(self.channel,GPIO.OUT)
+        GPIO = GPIO
+        GPIO.setmode(GPIO.Board)
+        GPIO.setup(self.channel,GPIO.OUT)
         
     
     def strike(self):
@@ -40,9 +40,9 @@ class RasPiStrike(Strike):
         Implementation of striking the door using the Raspberry Pi's pins.
         """
         self.logger.info("RasPi Striking!")
-        self.GPIO.output(self.channel,self.GPIO.HIGH)
+        GPIO.output(self.channel,self.GPIO.HIGH)
         time.sleep(5.0)
-        self.GPIO.output(self.channel,self.GPIO.LOW)
+        GPIO.output(self.channel,self.GPIO.LOW)
 
 class ArduinoStrike(Strike):
     """
@@ -88,6 +88,16 @@ class ArduinoStrike(Strike):
                 self.logger.error(f"Error striking: {str(e)}")
         else:
             self.logger.warning("Strike not sent; Arduino not available.")
+
+def get_strike_for_method(method: Union['fake', 'arduino', 'pi'], logger: logging.Logger) -> Strike:
+    if method == 'fake':
+        return Strike(logger)
+    elif method == 'arduino':
+        return ArduinoStrike(logger)
+    elif method == 'pi':
+        return RasPiStrike(logger)
+    else:
+        raise TypeError(f'Expected method to be one of fake, arduino, pi, but got `{method}`')
 
 def main():
     # Testing
