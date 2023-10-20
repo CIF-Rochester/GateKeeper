@@ -17,6 +17,7 @@ class Account():
         self.user = client.user_find(o_employeenumber=swipe.id) # returns a dictionary with the user's info
         self.summary = self.get_summary()
         self.swiped_lcc = swipe.lcc
+        self.id = swipe.id
 
         try:
             self.netid = self.get_net_id()
@@ -58,6 +59,7 @@ class Account():
             if int(self.swiped_lcc) < int(self.lcc):
                 # if someone tries to swipe with an earlier, 
                 # perhaps lost id, access will be denied
+                self.logger.warning(f"LCC of user {self.netid} is {self.lcc}. Swiped LCC was {self.swiped_lcc}.")
                 return False
             elif int(self.swiped_lcc) > int(self.lcc):
                 # if someone tries to swipe with a newer lcc id,
@@ -65,7 +67,7 @@ class Account():
                 self.logger.info(f"LCC of user {self.netid} is {self.lcc}. Swiped LCC was {self.swiped_lcc}. Updating user {self.netid} with new LCC of {self.swiped_lcc}...")
 
                 try:
-                    self.updateLCC()
+                    self.update_LCC()
                     self.logger.info(f"The LCC change for user {self.netid} from {self.lcc} to {self.swiped_lcc} succeeded.")
                 except Exception as e:
                     self.logger.warning(f"The attempt to change the LCC of user {self.netid} from {self.lcc} to {self.swiped_lcc} failed.")
@@ -76,6 +78,9 @@ class Account():
 
         return True
     
-    def updateLCC():
-        #TODO
-        pass
+    def update_LCC(self) -> None:
+        """
+        Updates the LCC of the user to the LCC thatwas swiped.
+        """
+        
+        self.client.user_mod(a_uid=self.netid, o_employeetype=self.swiped_lcc)

@@ -21,25 +21,28 @@ class Strike():
         self.logger.info("Fake strike activated!")
 
 class RasPiStrike(Strike):
-    channel = 1
     """
     Class implementation of striking the door using the Raspberry Pi's pins.
     """
+
+    channel = 1
     
     def __init__(self, logger: logging.Logger) -> None:
         import RPi.GPIO as GPIO
         self.logger = logger
+        GPIO = GPIO
         GPIO.setmode(GPIO.Board)
         GPIO.setup(self.channel,GPIO.OUT)
+        
     
     def strike(self):
         """
         Implementation of striking the door using the Raspberry Pi's pins.
         """
         self.logger.info("RasPi Striking!")
-        GPIO.output(self.channel,GPIO.HIGH)
+        GPIO.output(self.channel,self.GPIO.HIGH)
         time.sleep(5.0)
-        GPIO.output(self.channel,GPIO.LOW)
+        GPIO.output(self.channel,self.GPIO.LOW)
 
 class ArduinoStrike(Strike):
     """
