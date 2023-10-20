@@ -22,7 +22,7 @@ def parse_args() -> (logging.Logger, Strike):
     args = parser.parse_args()
 
     cfg_log_path = Utils.check_log_path_cfg()
-    if args.config:
+    if args.log:
         logger: logging.Logger = Utils.setup_custom_logger(__name__, file_path = args.config)
     elif cfg_log_path:
         logger: logging.Logger = Utils.setup_custom_logger(__name__, file_path = cfg_log_path)
