@@ -10,31 +10,31 @@ import logging
 import argparse
 import os
 
-SCRIPT_PATH = os.path.abspath(os.path.dirname(__file__))
-PATH_TO_CFG = os.path.join(SCRIPT_PATH, "config.cfg")
 EXIT_TOKENS = ['q', 'exit', 'quit']
-
-logger: logging.Logger = Utils.setup_custom_logger(__name__)
 
 urllib3.disable_warnings()
 
-def signal_handler(sig, frame):
-    Utils.exit(logger, msg = "Exiting due to CTRL-C...")
-
-signal.signal(signal.SIGINT, signal_handler)
-
-def parse_args() -> Strike:
+def parse_args() -> (logging.Logger, Strike):
     parser = argparse.ArgumentParser(description="GateKeeper program for the Computer Interest Floor Lab's door strike.")
     parser.add_argument('--strike', '-s', help='Method used for striking the door. Fake is used for testing purposes.', choices=['fake', 'arduino', 'pi'], default=None)
+    parser.add_argument('--log', '-l', help="Use specified log path", default=None)
 
     args = parser.parse_args()
+
+    cfg_log_path = Utils.check_log_path_cfg()
+    if args.config:
+        logger: logging.Logger = Utils.setup_custom_logger(__name__, file_path = args.config)
+    elif cfg_log_path:
+        logger: logging.Logger = Utils.setup_custom_logger(__name__, file_path = cfg_log_path)
+    else:
+        logger: logging.Logger = Utils.setup_custom_logger(__name__)
 
     if args.strike:
         method = args.strike
     else:
         try:
             config = configparser.ConfigParser()
-            config.read(PATH_TO_CFG)
+            config.read(Utils.PATH_TO_CFG)
             method = config.get('strike', 'method')
         except Exception as e:
             logger.exception(f"Something is wrong with the config file: {e}")
@@ -48,14 +48,20 @@ def parse_args() -> Strike:
     elif method == 'pi':
         strike = RasPiStrike(logger)
 
-    return strike
+    return logger, strike
+
+logger: logging.Logger
+logger, strike = parse_args()
+
+def signal_handler(sig, frame):
+    Utils.exit(logger, msg = "Exiting due to CTRL-C...")
+
+signal.signal(signal.SIGINT, signal_handler)
 
 def main():
-    strike = parse_args()
-
     try:
         config = configparser.ConfigParser()
-        config.read(PATH_TO_CFG)
+        config.read(Utils.PATH_TO_CFG)
         username = config.get('credentials', 'username')
         password = config.get('credentials', 'password')
     except Exception as e:
@@ -71,25 +77,28 @@ def main():
         Utils.exit(logger, msg = "Forcing exit...")
     
     while(True):
-        data_from_swipe = input()
-        # card reader acts as keyboard, so input() is
-        # used to get the output of the card reader
-
-        if data_from_swipe.lower() in EXIT_TOKENS:
-            break
-
-        swipe = Swipe(data_from_swipe, logger)
-
-        account = Account(swipe, client, logger)
-
         try:
-            if account.has_access:
-                logger.info(f"Access granted to {account.netid}")
-                strike.strike()
-            else:
-                logger.info(f"Denied access to ID: {swipe.id} LCC: {swipe.lcc}")
-        except:
-            logger.warning(f"Unable to insantiate account from ID: {swipe.id}, LCC: {swipe.lcc}")
+            data_from_swipe = input()
+            # card reader acts as keyboard, so input() is
+            # used to get the output of the card reader
+
+            if data_from_swipe.lower() in EXIT_TOKENS:
+                break
+
+            swipe = Swipe(data_from_swipe, logger)
+
+            account = Account(swipe, client, logger)
+
+            try:
+                if account.has_access:
+                    logger.info(f"Access granted to {account.netid}")
+                    strike.strike()
+                else:
+                    logger.info(f"Denied access to ID: {swipe.id} LCC: {swipe.lcc}")
+            except:
+                logger.warning(f"Unable to insantiate account from ID: {swipe.id}, LCC: {swipe.lcc}")
+        except Exception as e:
+            logger.exception(f"Encountered error: {e}")
 
     Utils.exit(logger)
 

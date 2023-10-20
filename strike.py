@@ -3,7 +3,6 @@ import serial
 import logging
 import time
 import serial.tools.list_ports
-import RPi.GPIO as GPIO
 
 class Strike():
     """
@@ -21,24 +20,29 @@ class Strike():
         self.logger.info("Fake strike activated!")
 
 class RasPiStrike(Strike):
-    channel = 1
     """
     Class implementation of striking the door using the Raspberry Pi's pins.
     """
+
+    channel = 1
     
     def __init__(self, logger: logging.Logger) -> None:
+        import RPi.GPIO as GPIO
+
         self.logger = logger
-        GPIO.setmode(GPIO.Board)
-        GPIO.setup(self.channel,GPIO.OUT)
+        self.GPIO = GPIO
+        self.GPIO.setmode(GPIO.Board)
+        self.GPIO.setup(self.channel,GPIO.OUT)
+        
     
     def strike(self):
         """
         Implementation of striking the door using the Raspberry Pi's pins.
         """
         self.logger.info("RasPi Striking!")
-        GPIO.output(self.channel,GPIO.HIGH)
+        self.GPIO.output(self.channel,self.GPIO.HIGH)
         time.sleep(5.0)
-        GPIO.output(self.channel,GPIO.LOW)
+        self.GPIO.output(self.channel,self.GPIO.LOW)
 
 class ArduinoStrike(Strike):
     """
