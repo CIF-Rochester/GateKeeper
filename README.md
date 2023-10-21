@@ -13,6 +13,22 @@ This repository is intended to permanently replace the previously used Cerberus 
 # Info
 - The name `GateKeeper` subject to change. Think of it as a codename for the time being.
 
+# Command Line Arguments
+```
+usage: main.py [-h] [--strike {fake,arduino,pi}] [--config CONFIG]
+
+GateKeeper program for controlling an electronic door strike with a card
+reader.
+
+options:
+  -h, --help            show this help message and exit
+  --strike {fake,arduino,pi}, -s {fake,arduino,pi}
+                        Method used for controlling the door strike. Fake is
+                        used for testing purposes.
+  --config CONFIG, -c CONFIG
+                        Path to GateKeeper config file.
+```
+
 # Classes
 ### Account
 - For getting the info from an IPA user, such as netid.
@@ -23,7 +39,7 @@ This repository is intended to permanently replace the previously used Cerberus 
 - Contains three classes: `Strike`, `ArduinoStrike`, `RasPiStrike`.
 - `Strike` is for testing purposes, it doesn't send any electrical signals.
 - `ArduinoStrike` is for activating the strike with the arduino.
-- `RasPiStrike` is for activating the strike with the GPIO pins of a Raspberry Pi. Not yet tested.
+- `RasPiStrike` is for activating the strike with the GPIO pins of a Raspberry Pi.
 
 ### Swipe
 - For parsing the raw data from the swipe.
