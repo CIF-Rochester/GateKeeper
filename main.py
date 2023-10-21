@@ -63,8 +63,8 @@ def main():
 
         try:
             account = Account(swipe, client, logger, config)
-        except:
-            logger.warning(f"Unable to insantiate account from ID: {swipe.id}, LCC: {swipe.lcc}")
+        except Exception as e:
+            logger.warning(f"Unable to instantiate account from ID: {swipe.id}, LCC: {swipe.lcc}", exc_info=e)
 
         if account.has_access:
             logger.info(f"Access granted to {account.netid}")
