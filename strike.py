@@ -25,13 +25,12 @@ class RasPiStrike(Strike):
     Class implementation of striking the door using the Raspberry Pi's pins.
     """
 
-    channel = 1
-    
+    channel = 36
     def __init__(self, logger: logging.Logger) -> None:
         import RPi.GPIO as GPIO
         self.logger = logger
-        GPIO = GPIO
-        GPIO.setmode(GPIO.Board)
+        self.GPIO = GPIO
+        GPIO.setmode(GPIO.BOARD)
         GPIO.setup(self.channel,GPIO.OUT)
         
     
@@ -40,9 +39,9 @@ class RasPiStrike(Strike):
         Implementation of striking the door using the Raspberry Pi's pins.
         """
         self.logger.info("RasPi Striking!")
-        GPIO.output(self.channel,self.GPIO.HIGH)
+        self.GPIO.output(self.channel,self.GPIO.HIGH)
         time.sleep(5.0)
-        GPIO.output(self.channel,self.GPIO.LOW)
+        self.GPIO.output(self.channel,self.GPIO.LOW)
 
 class ArduinoStrike(Strike):
     """

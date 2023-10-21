@@ -23,7 +23,7 @@ class Credentials:
 @dataclass
 class Access:
     # comma separated list of groups to grant access to
-    allowed_groups: set[str]
+    allowed_groups: set()
 
 @dataclass
 class Strike:
