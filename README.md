@@ -32,7 +32,7 @@ options:
 # Classes
 ### Account
 - For getting the info from an IPA user, such as netid.
-- Also has a function `hasAccess()` to determine if the user should, based on their IPA account credentials, be allowed to swipe into the lab.
+- Also has a function `has_access()` to determine if the user should, based on their IPA account credentials, be allowed to swipe into the lab.
 
 ### Strike
 - For controlling the door strike.
