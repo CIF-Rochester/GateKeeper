@@ -21,7 +21,7 @@ class Strike():
         self.logger.info("Fake strike activated!")
 
 class RasPiStrike(Strike):
-    channel = 1
+    channel = 16
     """
     Class implementation of striking the door using the Raspberry Pi's pins.
     """
