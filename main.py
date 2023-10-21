@@ -64,6 +64,9 @@ def main():
         try:
             account = Account(swipe, client, logger, config)
         except Exception as e:
+            # Note: This may log errors from python-freeipa. Inspecting the
+            # library source shows this will note leak any credentials into the
+            # log: https://github.com/waldur/python-freeipa/blob/develop/src/python_freeipa/exceptions.py
             logger.warning(f"Unable to instantiate account from ID: {swipe.id}, LCC: {swipe.lcc}", exc_info=e)
 
         if account.has_access:
