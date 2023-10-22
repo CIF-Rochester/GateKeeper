@@ -32,11 +32,21 @@ class Strike:
     method: Union['fake', 'arduino', 'pi']
 
 @dataclass
+class Reader:
+    # Keep these two lists in sync
+    MODES = ['stdin', 'rawkbd']
+    mode: Union['stdin', 'rawkbd']
+
+    # Path to keyboard device file. Required only when mode=rawkbd
+    device: os.PathLike
+
+@dataclass
 class Config:
     logging: Logging
     credentials: Credentials
     access: Access
     strike: Strike
+    reader: Reader
 
 def load_config(config_path: os.PathLike) -> Config:
     '''
@@ -74,11 +84,23 @@ def load_config(config_path: os.PathLike) -> Config:
             method=strike_method
         )
 
+        reader_mode = cfg.get('reader', 'mode')
+        if reader_mode not in Reader.MODES:
+            raise TypeError(f'Expected reader.mode to be one of {Reader.MODES}')
+        reader_device = None
+        if reader_mode == 'rawkbd':
+            reader_device = cfg.get('reader', 'device')
+        reader = Reader(
+            mode=reader_mode,
+            device=reader_device
+        )
+
         config = Config(
             logging=logging,
             credentials=credentials,
             access=access,
-            strike=strike
+            strike=strike,
+            reader=reader,
         )
     except Exception as e:
         print(f"Error in config file {config_path}: {e}", file=sys.stderr)
