@@ -89,7 +89,10 @@ def load_config(config_path: os.PathLike) -> Config:
             raise TypeError(f'Expected reader.mode to be one of {Reader.MODES}')
         reader_device = None
         if reader_mode == 'rawkbd':
-            reader_device = cfg.get('reader', 'device')
+            try:
+                reader_device = cfg.get('reader', 'device')
+            except Exception:
+                raise Exception("Option 'device' in section 'reader' is missing. This setting is required because reader.mode='rawkbd'")
         reader = Reader(
             mode=reader_mode,
             device=reader_device

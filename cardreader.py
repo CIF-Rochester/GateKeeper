@@ -2,6 +2,8 @@ from typing import Callable, Literal, NoReturn, Iterator
 from dataclasses import dataclass
 import os
 import sys
+import struct
+import io
 from logging import Logger
 from config import Reader as ReaderConfig
 
@@ -58,6 +60,9 @@ class CouldNotInitializeReader(Exception):
     '''
     message: str
 
+    def __init__(self, message: str):
+        self.message = message
+
 ReaderEventHandler = Callable[[ReaderEvent], None]
 
 class CardReader:
@@ -108,6 +113,64 @@ class StdinReader(CardReader):
                 break
 
             yield _parse_reader_line(data)
+
+class RawKbdReader(CardReader):
+    '''
+    Reads card data from a raw Linux keyboard device file.
+    '''
+
+    FORMAT = 'llHHi'
+    EVENT_SIZE = struct.calcsize(RawKbdReader.FORMAT)
+
+    # kinda cursed way for parsing keyboard events. index the keycode into here
+    # and you'll get something reasonable. this doesnt cover all keycodes.
+    #
+    # control keys are replaced with space.
+    #
+    # reference: https://github.com/torvalds/linux/blob/v5.5-rc5/include/uapi/linux/input-event-codes.h
+    KEYS="  1234567890-= \tqwertyuiop[]\n asdfghjkl;'` \\zxcvbnm,./"
+
+    device: io.BytesIO
+    logger: Logger
+
+    def __init__(self, device: str, logger: Logger):
+        self.logger = logger
+
+        try:
+            self.device = open(device, mode='rb', buffering=0)
+        except FileNotFoundError:
+            raise CouldNotInitializeReader(
+                message=f"Keyboard device file '{device}' not found"
+            )
+        except PermissionError:
+            raise CouldNotInitializeReader(
+                message=f"Lacking permission to open keyboard device file '{device}'"
+            )
+
+    def events(self) -> Iterator[ReaderEvent]:
+        logger = self.logger
+
+        buf = ''
+
+        while True:
+            event = self.device.read(RawKbdReader.EVENT_SIZE)
+            if not event:
+                logger.info(f"no more data from rawkbd: no more events from the card reader will be received")
+                break
+
+            (tv_sec, tv_usec, type, code, value) = struct.unpack(RawKbdReader.FORMAT, event)
+            if event.type == 1:
+                # key event
+                # https://github.com/torvalds/linux/blob/v5.5-rc5/include/uapi/linux/input-event-codes.h#L39
+                if event.code < len(RawKbdReader.KEYS):
+                    # convert keycode to character
+                    buf += RawKbdReader.KEYS[event.code]
+                else:
+                    logger.warn(f"received out-of-bounds keycode {event.code} while reading rawkbd device")
+
+            if buf.endswith('\n'):
+                # entire line has been read, parse it and yield it.
+                yield _parse_reader_line(buf[0:-1])
 
 def get_cardreader(config: ReaderConfig, logger: Logger) -> CardReader:
     match config.mode:
