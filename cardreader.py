@@ -118,18 +118,6 @@ class RawKbdReader(CardReader):
     '''
     Reads card data from a raw Linux keyboard device file.
     '''
-
-    FORMAT = 'llHHi'
-    EVENT_SIZE = struct.calcsize(RawKbdReader.FORMAT)
-
-    # kinda cursed way for parsing keyboard events. index the keycode into here
-    # and you'll get something reasonable. this doesnt cover all keycodes.
-    #
-    # control keys are replaced with space.
-    #
-    # reference: https://github.com/torvalds/linux/blob/v5.5-rc5/include/uapi/linux/input-event-codes.h
-    KEYS="  1234567890-= \tqwertyuiop[]\n asdfghjkl;'` \\zxcvbnm,./"
-
     device: io.BytesIO
     logger: Logger
 
@@ -148,29 +136,48 @@ class RawKbdReader(CardReader):
             )
 
     def events(self) -> Iterator[ReaderEvent]:
+        EVENT_FORMAT = 'llHHi'
+        EVENT_SIZE = struct.calcsize(EVENT_FORMAT)
+
+        # kinda cursed way for parsing keyboard events. index the keycode into here
+        # and you'll get something reasonable. this doesnt cover all keycodes.
+        #
+        # control keys are replaced with space.
+        #
+        # reference: https://github.com/torvalds/linux/blob/v5.5-rc5/include/uapi/linux/input-event-codes.h
+        TY_KEY = 1
+        KEYS = "  1234567890-= \tqwertyuiop[]\n asdfghjkl;'` \\zxcvbnm,./"
+        VL_KEYDOWN = 1
+        VL_KEYUP = 0
+
         logger = self.logger
 
         buf = ''
 
         while True:
-            event = self.device.read(RawKbdReader.EVENT_SIZE)
+            event = self.device.read(EVENT_SIZE)
             if not event:
                 logger.info(f"no more data from rawkbd: no more events from the card reader will be received")
                 break
 
-            (tv_sec, tv_usec, type, code, value) = struct.unpack(RawKbdReader.FORMAT, event)
-            if event.type == 1:
-                # key event
+            try:
+                (tv_sec, tv_usec, type, code, value) = struct.unpack(EVENT_FORMAT, event)
+            except Exception as e:
+                logger.warning("failed to read key event", exc_info=e)
+
+            if type == TY_KEY and value == VL_KEYDOWN:
+                # key was just pressed
                 # https://github.com/torvalds/linux/blob/v5.5-rc5/include/uapi/linux/input-event-codes.h#L39
-                if event.code < len(RawKbdReader.KEYS):
+                if code < len(KEYS):
                     # convert keycode to character
-                    buf += RawKbdReader.KEYS[event.code]
+                    buf += KEYS[code]
                 else:
-                    logger.warn(f"received out-of-bounds keycode {event.code} while reading rawkbd device")
+                    logger.warn(f"received out-of-bounds keycode {code} while reading rawkbd device")
 
             if buf.endswith('\n'):
                 # entire line has been read, parse it and yield it.
                 yield _parse_reader_line(buf[0:-1])
+                buf = ''
 
 def get_cardreader(config: ReaderConfig, logger: Logger) -> CardReader:
     match config.mode:
@@ -179,3 +186,18 @@ def get_cardreader(config: ReaderConfig, logger: Logger) -> CardReader:
         case _:
             # unreachable
             return None
+
+# RAW KBD INPUT TESTING CODE
+if __name__ == '__main__':
+    import logging
+    import sys
+
+    logger = logging.getLogger('logger')
+    handler = logging.StreamHandler(stream=sys.stdout)
+    logger.setLevel(logging.DEBUG)
+    logger.addHandler(handler)
+
+    device = sys.argv[1]
+    reader = RawKbdReader(device, logger)
+    for evt in reader.events():
+        logger.info(f"EVENT: {evt}")
