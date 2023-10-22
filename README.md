@@ -41,10 +41,18 @@ options:
 - `ArduinoStrike` is for activating the strike with the arduino.
 - `RasPiStrike` is for activating the strike with the GPIO pins of a Raspberry Pi.
 
-### Swipe
-- For parsing the raw data from the swipe.
-- Stores 8 digit ID number and 2 digit LCC number.
-- expects data as sent by the MODEL:ET-MSR90 ETEKJOY card reader. Example data: `;9333333331108700000?\n`
+### cardreader
+
+Base class `CardReader` has an `events()` method that returns an iterator of
+`ReaderEvents`. For now, these are `SwipeEvent` and `InvalidDataEvent`.
+
+The two implementations of this are:
+
+- `StdinReader` - Reads swipe data in the expected format from stdin
+- `RawKbdReader` - Reads swipe data in the expected format by parsing a keyboard device file
+
+Expected data format:
+- as sent by the MODEL:ET-MSR90 ETEKJOY card reader. Example data: `;9333333331108700000?\n`
 - The format is `;9<8ID><2LCC><Garbage><New Line>`. In the example, `33333333` is the 8 digit ID and `11` is the 2 digit LCC.
 
 ### Utils
