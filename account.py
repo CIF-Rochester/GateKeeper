@@ -1,4 +1,3 @@
-from swipe import Swipe
 from python_freeipa import ClientMeta
 import logging
 from config import Config
@@ -10,14 +9,14 @@ class Account():
     Representation of an IPA server account.
     """
 
-    def __init__(self, swipe: Swipe, client: ClientMeta, logger: logging.Logger, config: Config) -> None:
+    def __init__(self, id: str, lcc: str, client: ClientMeta, logger: logging.Logger, config: Config) -> None:
         self.logger = logger
         self.config = config
         self.client = client
-        self.user = client.user_find(o_employeenumber=swipe.id) # returns a dictionary with the user's info
+        self.user = client.user_find(o_employeenumber=id) # returns a dictionary with the user's info
         self.summary = self.get_summary()
-        self.swiped_lcc = swipe.lcc
-        self.id = swipe.id
+        self.swiped_lcc = lcc
+        self.id = id
 
         try:
             self.netid = self.get_net_id()

@@ -1,9 +1,9 @@
-from swipe import Swipe
 from account import Account
 from strike import Strike, get_strike_for_method
 from utils import Utils
 from python_freeipa import ClientMeta
 from config import load_config, Config
+import cardreader
 import signal
 import urllib3
 import logging
@@ -47,33 +47,26 @@ def main():
     except Exception as e:
         logger.critical(f"Unable to connect to IPA server at {config.credentials.host}. Check credentials.")
         Utils.exit(logger, msg = "Forcing exit...")
-    
-    while(True):
-        # card reader acts as keyboard, so input() is used to get the output of
-        # the card reader
-        try:
-            data_from_swipe = input()
-        except EOFError:
-            break
 
-        if data_from_swipe.lower() in EXIT_TOKENS:
-            break
+    reader = cardreader.get_cardreader(config.reader, logger)
+    for evt in reader.events():
+        match evt:
+            case cardreader.SwipeEvent(id, lcc):
+                try:
+                    account = Account(id, lcc, client, logger, config)
+                except Exception as e:
+                    # Note: This may log errors from python-freeipa. Inspecting the
+                    # library source shows this will note leak any credentials into the
+                    # log: https://github.com/waldur/python-freeipa/blob/develop/src/python_freeipa/exceptions.py
+                    logger.warning(f"Unable to instantiate account from ID: {id}, LCC: {lcc}", exc_info=e)
 
-        swipe = Swipe(data_from_swipe, logger)
-
-        try:
-            account = Account(swipe, client, logger, config)
-        except Exception as e:
-            # Note: This may log errors from python-freeipa. Inspecting the
-            # library source shows this will note leak any credentials into the
-            # log: https://github.com/waldur/python-freeipa/blob/develop/src/python_freeipa/exceptions.py
-            logger.warning(f"Unable to instantiate account from ID: {swipe.id}, LCC: {swipe.lcc}", exc_info=e)
-
-        if account.has_access:
-            logger.info(f"Access granted to {account.netid}")
-            strike.strike()
-        else:
-            logger.info(f"Denied access to ID: {swipe.id} LCC: {swipe.lcc}")
+                if account.has_access:
+                    logger.info(f"Access granted to {account.netid}")
+                    strike.strike()
+                else:
+                    logger.info(f"Denied access to ID: {id} LCC: {lcc}")
+            case cardreader.InvalidDataEvent(data, exc_info):
+                logger.warning(f"Invalid data received from card reader: {data}", exc_info=exc_info)
 
     Utils.exit(logger)
 
