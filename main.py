@@ -50,23 +50,26 @@ def main():
 
     reader = cardreader.get_cardreader(config.reader, logger)
     for evt in reader.events():
-        match evt:
-            case cardreader.SwipeEvent(id, lcc):
-                try:
-                    account = Account(id, lcc, client, logger, config)
-                except Exception as e:
-                    # Note: This may log errors from python-freeipa. Inspecting the
-                    # library source shows this will note leak any credentials into the
-                    # log: https://github.com/waldur/python-freeipa/blob/develop/src/python_freeipa/exceptions.py
-                    logger.warning(f"Unable to instantiate account from ID: {id}, LCC: {lcc}", exc_info=e)
+        if isinstance(evt, cardreader.SwipeEvent):
+            id = evt.id
+            lcc = evt.lcc
+            try:
+                account = Account(id, lcc, client, logger, config)
+            except Exception as e:
+                # Note: This may log errors from python-freeipa. Inspecting the
+                # library source shows this will note leak any credentials into the
+                # log: https://github.com/waldur/python-freeipa/blob/develop/src/python_freeipa/exceptions.py
+                logger.warning(f"Unable to instantiate account from ID: {id}, LCC: {lcc}", exc_info=e)
 
-                if account.has_access:
-                    logger.info(f"Access granted to {account.netid}")
-                    strike.strike()
-                else:
-                    logger.info(f"Denied access to ID: {id} LCC: {lcc}")
-            case cardreader.InvalidDataEvent(data, exc_info):
-                logger.warning(f"Invalid data received from card reader: {data}", exc_info=exc_info)
+            if account.has_access:
+                logger.info(f"Access granted to {account.netid}")
+                strike.strike()
+            else:
+                logger.info(f"Denied access to ID: {id} LCC: {lcc}")
+        elif isinstance(evt, cardreader.InvalidDataEvent):
+            logger.warning(f"Invalid data received from card reader: {evt.data}", exc_info=evt.exc_info)
+        else:
+            logger.warning(f"Ignoring unimplemented reader event {evt}")
 
     Utils.exit(logger)
 

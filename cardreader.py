@@ -19,9 +19,8 @@ class based on the configuration settings.
 Example code:
 
     def handle_cardreader_event(evt: ReaderEvent):
-        match evt:
-            case SwipeEvent(id, lcc):
-                # do something with card data
+        if isinstance(evt, SwipeEvent):
+            # do something with evt.id and evt.lcc
 
     config = load_config("config.cfg")
     cardreader = get_cardreader(config.reader)
@@ -180,12 +179,13 @@ class RawKbdReader(CardReader):
                 buf = ''
 
 def get_cardreader(config: ReaderConfig, logger: Logger) -> CardReader:
-    match config.mode:
-        case "stdin":
-            return StdinReader(logger)
-        case _:
-            # unreachable
-            return None
+    if config.mode == "stdin":
+        return StdinReader(logger)
+    elif config.mode == "rawkbd":
+        return RawKbdReader(config.device, logger)
+    else:
+        # unreachable
+        return None
 
 # RAW KBD INPUT TESTING CODE
 if __name__ == '__main__':
