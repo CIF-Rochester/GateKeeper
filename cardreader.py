@@ -145,7 +145,7 @@ class RawKbdReader(CardReader):
         #
         # reference: https://github.com/torvalds/linux/blob/v5.5-rc5/include/uapi/linux/input-event-codes.h
         TY_KEY = 1
-        KEYS = "  1234567890-= \tqwertyuiop[]\n asdfghjkl;'` \\zxcvbnm,./"
+        KEYS = "  1234567890-= \tqwertyuiop[]\n asdfghjkl;'` \\zxcvbnm,./ "
         VL_KEYDOWN = 1
         VL_KEYUP = 0
 
