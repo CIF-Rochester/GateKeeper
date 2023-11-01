@@ -40,32 +40,30 @@ def main():
         strike_method = args.strike
     strike = get_strike_for_method(strike_method, logger)
 
-    try:
-        client = ClientMeta(config.credentials.host, verify_ssl=config.credentials.verify_ssl)
-        client.login(config.credentials.username, config.credentials.password)
-        logger.info(f"Successfuly logged in to IPA at {config.credentials.host} as: {config.credentials.username}")
-    except Exception as e:
-        logger.critical(f"Unable to connect to IPA server at {config.credentials.host}. Check credentials.")
-        Utils.exit(logger, msg = "Forcing exit...")
+    client = Utils.setup_ipa_client(logger, config)
 
     reader = cardreader.get_cardreader(config.reader, logger)
     for evt in reader.events():
         if isinstance(evt, cardreader.SwipeEvent):
             id = evt.id
             lcc = evt.lcc
-            try:
-                account = Account(id, lcc, client, logger, config)
-            except Exception as e:
-                # Note: This may log errors from python-freeipa. Inspecting the
-                # library source shows this will note leak any credentials into the
-                # log: https://github.com/waldur/python-freeipa/blob/develop/src/python_freeipa/exceptions.py
-                logger.warning(f"Unable to instantiate account from ID: {id}, LCC: {lcc}", exc_info=e)
 
-            if account.has_access:
-                logger.info(f"Access granted to {account.netid}")
-                strike.strike()
-            else:
-                logger.info(f"Denied access to ID: {id} LCC: {lcc}")
+            account = Utils.get_account_from_ipa(id, lcc, logger, client, config)
+
+            # If the account instantiation fails, restart the connection to the IPA server and try again.
+            if not account:
+                logger.info("Restarting connection to IPA server and trying to instantiate the account again...")
+
+                client = Utils.setup_ipa_client(logger, config)
+
+                account = Utils.get_account_from_ipa(id, lcc, logger, client, config)
+
+            if account:
+                if account.has_access:
+                    logger.info(f"Access granted to {account.netid}")
+                    strike.strike()
+                else:
+                    logger.info(f"Denied access to ID: {id} LCC: {lcc}")
         elif isinstance(evt, cardreader.InvalidDataEvent):
             logger.warning(f"Invalid data received from card reader: {evt.data}", exc_info=evt.exc_info)
         else:

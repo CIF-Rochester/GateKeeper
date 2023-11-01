@@ -33,7 +33,6 @@ class RasPiStrike(Strike):
         GPIO.setmode(GPIO.BOARD)
         GPIO.setup(self.channel,GPIO.OUT)
         
-    
     def strike(self):
         """
         Implementation of striking the door using the Raspberry Pi's pins.
@@ -101,7 +100,7 @@ def get_strike_for_method(method: Union['fake', 'arduino', 'pi'], logger: loggin
 def main():
     # Testing
     logger = Utils.setup_custom_logger(__name__)
-    strike_controller = ArduinoStrike(logger)
+    strike_controller = Strike(logger)
     strike_controller.strike()
 
 if __name__ == "__main__":
