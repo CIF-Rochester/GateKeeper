@@ -13,7 +13,9 @@ class Account():
         self.logger = logger
         self.config = config
         self.client = client
+
         self.user = client.user_find(o_employeenumber=id) # returns a dictionary with the user's info
+        
         self.summary = self.get_summary()
         self.swiped_lcc = lcc
         self.id = id
@@ -47,7 +49,7 @@ class Account():
         
         if self.summary != ONE_USER_MATCHED:
             # make sure that there is only one user being matched
-            # (if swiped lcc and 8 digit num are both empty, all users will be matched)
+            # (if swiped lcc and 8 digit id are both empty, all users will be matched)
             return False
 
         if not (set(self.groups) & self.config.access.allowed_groups):
@@ -79,7 +81,7 @@ class Account():
     
     def update_LCC(self) -> None:
         """
-        Updates the LCC of the user to the LCC thatwas swiped.
+        Updates the LCC of the user to the LCC that was swiped.
         """
         
         self.client.user_mod(a_uid=self.netid, o_employeetype=self.swiped_lcc)

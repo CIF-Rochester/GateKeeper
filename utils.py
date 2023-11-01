@@ -3,7 +3,9 @@ import sys
 import os
 import pathlib
 import configparser
-
+from account import Account
+from python_freeipa import ClientMeta
+from config import Config
 
 class Utils():
     """
@@ -49,6 +51,33 @@ class Utils():
             path = None
         
         return path
+    
+    def setup_ipa_client(logger: logging.Logger, config: Config) -> ClientMeta:
+        client = None
+
+        try:
+            client = ClientMeta(config.credentials.host, verify_ssl=config.credentials.verify_ssl)
+            client.login(config.credentials.username, config.credentials.password)
+
+            logger.info(f"Successfuly logged in to IPA at {config.credentials.host} as: {config.credentials.username}")
+        except Exception as e:
+            logger.critical(f"Unable to connect to IPA server at {config.credentials.host}. Check credentials.", exc_info=e)
+            Utils.exit(logger, msg = "Forcing exit...")
+
+        return client
+
+    def get_account_from_ipa(id: str, lcc: str, logger: logging.Logger, client: ClientMeta, config: Config) -> Account:
+        account = None
+
+        try:
+            account = Account(id, lcc, client, logger, config)
+        except Exception as e:
+            # Note: This may log errors from python-freeipa. Inspecting the
+            # library source shows this will not leak any credentials into the
+            # log: https://github.com/waldur/python-freeipa/blob/develop/src/python_freeipa/exceptions.py
+            logger.warning(f"Unable to instantiate account from ID: {id}, LCC: {lcc}", exc_info=e)
+
+        return account
     
     def exit(logger: logging.Logger, msg = "Exiting...") -> None:
         """
