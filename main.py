@@ -45,7 +45,7 @@ def main():
     reader = cardreader.get_cardreader(config.reader, logger)
     for evt in reader.events():
         if isinstance(evt, cardreader.SwipeEvent):
-            account = None
+            account: Account = None
             id = evt.id
             lcc = evt.lcc
 

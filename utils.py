@@ -67,7 +67,7 @@ class Utils():
         return client
 
     def get_account_from_ipa(id: str, lcc: str, logger: logging.Logger, client: ClientMeta, config: Config) -> Account:
-        account = None
+        account: Account = None
 
         try:
             account = Account(id, lcc, client, logger, config)
