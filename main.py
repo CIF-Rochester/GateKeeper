@@ -45,6 +45,7 @@ def main():
     reader = cardreader.get_cardreader(config.reader, logger)
     for evt in reader.events():
         if isinstance(evt, cardreader.SwipeEvent):
+            account = None
             id = evt.id
             lcc = evt.lcc
 
@@ -58,12 +59,11 @@ def main():
 
                 account = Utils.get_account_from_ipa(id, lcc, logger, client, config)
 
-            if account:
-                if account.has_access:
-                    logger.info(f"Access granted to {account.netid}")
-                    strike.strike()
-                else:
-                    logger.info(f"Denied access to ID: {id} LCC: {lcc}")
+            if account and account.has_access:
+                logger.info(f"Access granted to {account.netid}")
+                strike.strike()
+            else:
+                logger.info(f"Denied access to ID: {id} LCC: {lcc}")
         elif isinstance(evt, cardreader.InvalidDataEvent):
             logger.warning(f"Invalid data received from card reader: {evt.data}", exc_info=evt.exc_info)
         else:
