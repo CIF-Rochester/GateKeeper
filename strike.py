@@ -37,7 +37,7 @@ class RasPiStrike(Strike):
         """
         Implementation of striking the door using the Raspberry Pi's pins.
         """
-        self.logger.info("RasPi Striking!")
+        #self.logger.info("RasPi Striking!")
         self.GPIO.output(self.channel,self.GPIO.HIGH)
         time.sleep(5.0)
         self.GPIO.output(self.channel,self.GPIO.LOW)
